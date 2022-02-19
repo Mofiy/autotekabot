@@ -5,7 +5,7 @@ from userclass import User
 __version__ = 0.0004
 
 
-class ScoreBoard(object):
+class Wallet(object):
     def __init__(self):
         self.filename = os.path.join(os.getcwd(), 'score.csv')
         self.columns = ['user_id',

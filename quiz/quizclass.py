@@ -4,7 +4,7 @@ import pandas as pd
 from database import LoadData
 from userclass import User
 
-__version_ = 0.0017
+__version__ = 0.0001
 
 
 class Quiz(object):
