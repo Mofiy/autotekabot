@@ -138,4 +138,5 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/quiz/token.txt
+/token.txt
+/token.txt
