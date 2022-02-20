@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from userclass import User
 
-__version__ = 0.0004
+__version__ = 0.0001
 
 
 class Wallet(object):
