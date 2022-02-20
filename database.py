@@ -25,220 +25,205 @@ class BotDatabase:
         c = conn.cursor()
         # Create tables
         c.execute('''CREATE TABLE IF NOT EXISTS users (
-			id text primary key, 
-			name_id text, 
-			name text,
-			wallet text,  
-			link text, 
+			user_id INTEGER PRYMARY KEY, 
+			user_name TEXT,
+			wallet INTEGER NOT NULL DEFAULT 0,  
+			code INTEGER NOT NULL DEFAULT 0,
+			inviter INTEGER NOT NULL DEFAULT 0
 			)''')
+
+        # 			state integer NOT NULL DEFAULT
 
         c.execute('''CREATE TABLE IF NOT EXISTS cars (
-			id text primary key, 
-			vin_number text, 
-			goverment_number text, 
-			body_number text, 
-			engine_number text, 
-			car_number text, 
-            last_date text,
-            link text,
-            from_user text
+			id INTEGER PRIMARY KEY AUTOINCREMENT, 
+			vin_number TEXT, 
+			goverment_number TEXT, 
+			body_number TEXT, 
+			engine_number TEXT, 
+			car_number TEXT, 
+            last_date DATE,
+            link TEXT,
+            from_user INTEGER
 			)''')
         conn.commit()
 
-    def SaveBot(self, bot):
+    def SaveUser(self, user):
         '''
-        Adds a Bot to the Database
+        Adds a User to the Database
 
-            id text primary key,
-            name text,
-            strategy_id text,
-            interval text,
-            order_type text,
-            trade_allocation text,
-            profit_target text,
-            test_run bool
+			id integer primary key AUTOINCREMENT,
+			user_id integer,
+			user_name text,
+			wallet integer,
+			code text
         '''
         conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        values = (
-            bot['id'],
-            bot['name'],
-            bot['strategy_name'],
-            bot['interval'],
-            bot['trade_allocation'],
-            bot['profit_target'],
-            bot['test_run'])
-        c.execute('INSERT INTO bots VALUES (?, ?, ?, ?, ?, ?, ?)', values)
+        values = (user["user_id"],
+                    user["user_name"],
+                    user["wallet"],
+                    user["code"])
+        c.execute('INSERT INTO users VALUES (?, ?, ?, ?)', values)
         conn.commit()
 
-    def GetBot(self, id: str):
-        ''' Gets Bot details from Database '''
+    def GetUser(self, user_id: int):
+        ''' Gets User details from Database '''
 
         conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
-        c.execute('SELECT * FROM bots WHERE id = ?', (id,))
+        c.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
         details = c.fetchone()
+
+
         return details
 
-    def GetAllBots(self):
-        ''' Gets Bot details from Database '''
 
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM bots')
-        details = c.fetchall()
-        return details
+    # def UpdateBot(self, user):
+    #     ''' Updates a Bot within the Database '''
+    #
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #
+    #     c.execute('Update bots ' + \
+    #               'Set ' + \
+    #               'name = ' + bot['name'] + ', ' + \
+    #               'profit_target = ' + bot['profit_target'] + ', ' + \
+    #               'Where id = ' + bot['id'])
+    #     conn.commit()
+    #
+    # def SaveOrder(self, order):
+    #     '''
+    #     Saves an Order to the Database
+    #     '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     values = (
+    #         order['id'],
+    #         order['bot_id'],
+    #         order['symbol'],
+    #         order['time'],
+    #         order['price'],
+    #         order['take_profit_price'],
+    #         order['original_quantity'],
+    #         order['executed_quantity'],
+    #         order['status'],
+    #         order['side'],
+    #         order['is_entry_order'],
+    #         order['is_closed'],
+    #         order['closing_order_id']
+    #     )
+    #     c.execute('INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', values)
+    #     conn.commit()
+    #
+    #
+    # def UpdateOrder(self, order):
+    #     ''' Updates a Bot within the Database '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #
+    #     values = (
+    #         order['take_profit_price'],
+    #         order['executed_quantity'],
+    #         order['status'],
+    #         order['is_closed'],
+    #         order['closing_order_id'],
+    #         order['id'])
+    #
+    #     c.execute('Update orders ' + \
+    #               'Set ' + \
+    #               'take_profit_price = ?, ' + \
+    #               'executed_quantity = ?, status = ?, ' + \
+    #               'is_closed = ?, closing_order_id = ? ' + \
+    #               'Where id = ?', values)
+    #     conn.commit()
+    #
+    # def SavePair(self, pair):
+    #     '''
+    #     Saves a Pair to the Database
+    #         id text primary key,
+    #         bot_id text,
+    #         symbol text,
+    #         is_active bool,
+    #         current_order_id text,
+    #         profit_loss text,
+    #         FOREIGN KEY(current_order_id) REFERENCES orders(id),
+    #     FOREIGN KEY(bot_id) REFERENCES bots(id)
+    #     '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     values = (
+    #         pair['id'],
+    #         pair['bot_id'],
+    #         pair['symbol'],
+    #         pair['is_active'],
+    #         pair['current_order_id'],
+    #         pair['profit_loss'],
+    #     )
+    #     c.execute('INSERT INTO pairs VALUES (?, ?, ?, ?, ?, ?)', values)
+    #     conn.commit()
+    #
+    # def GetPair(self, id: str):
+    #     ''' Gets Bot details from Database '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     c.execute('SELECT * FROM pairs WHERE id=?', (id,))
+    #     result = dict(c.fetchone())
+    #     return result
+    #
+    # def UpdatePair(self, bot, symbol, pair):
+    #     ''' Updates a Bot within the Database '''
+    #     values = (
+    #         pair['is_active'],
+    #         pair['current_order_id'],
+    #         pair['profit_loss'],
+    #         symbol,
+    #         bot['id'])
+    #
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     c.execute("UPDATE pairs " + \
+    #               "SET is_active = ?, current_order_id = ?, profit_loss = ? " + \
+    #               "WHERE symbol = ? and bot_id = ? ", values)
+    #     conn.commit()
+    #
+    # def GetOpenOrdersOfBot(self, bot):
+    #     ''' Gets all the bots within a database '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     c.execute('SELECT * FROM orders Where bot_id = ? and closing_order_id = 0 and is_closed = False', (bot['id'],))
+    #
+    #     orders = []
+    #     result = [dict(row) for row in c.fetchall()]
+    #     return result
+    #
+    # def GetActivePairsOfBot(self, bot):
+    #     ''' Gets all the bots within a database '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     c.execute('SELECT * FROM pairs Where bot_id = ? and is_active = True', (bot['id'],))
+    #     result = [dict(row) for row in c.fetchall()]
+    #     return result
+    #
+    # def GetAllPairsOfBot(self, bot):
+    #     ''' Gets all the bots within a database '''
+    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+    #     conn.row_factory = sqlite3.Row
+    #     c = conn.cursor()
+    #     c.execute('SELECT * FROM pairs Where bot_id = ?', (bot['id'],))
+    #     result = [dict(row) for row in c.fetchall()]
+    #     return result
 
-    def UpdateBot(self, bot):
-        ''' Updates a Bot within the Database '''
-
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-
-        c.execute('Update bots ' + \
-                  'Set ' + \
-                  'name = ' + bot['name'] + ', ' + \
-                  'profit_target = ' + bot['profit_target'] + ', ' + \
-                  'Where id = ' + bot['id'])
-        conn.commit()
-
-    def SaveOrder(self, order):
-        '''
-        Saves an Order to the Database
-        '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        values = (
-            order['id'],
-            order['bot_id'],
-            order['symbol'],
-            order['time'],
-            order['price'],
-            order['take_profit_price'],
-            order['original_quantity'],
-            order['executed_quantity'],
-            order['status'],
-            order['side'],
-            order['is_entry_order'],
-            order['is_closed'],
-            order['closing_order_id']
-        )
-        c.execute('INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', values)
-        conn.commit()
-
-    def GetOrder(self, id: str):
-        ''' Gets Bot details from Database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM orders WHERE id=?', (id,))
-        result = dict(c.fetchone())
-        return result
-
-    def UpdateOrder(self, order):
-        ''' Updates a Bot within the Database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-
-        values = (
-            order['take_profit_price'],
-            order['executed_quantity'],
-            order['status'],
-            order['is_closed'],
-            order['closing_order_id'],
-            order['id'])
-
-        c.execute('Update orders ' + \
-                  'Set ' + \
-                  'take_profit_price = ?, ' + \
-                  'executed_quantity = ?, status = ?, ' + \
-                  'is_closed = ?, closing_order_id = ? ' + \
-                  'Where id = ?', values)
-        conn.commit()
-
-    def SavePair(self, pair):
-        '''
-        Saves a Pair to the Database
-            id text primary key,
-            bot_id text,
-            symbol text,
-            is_active bool,
-            current_order_id text,
-            profit_loss text,
-            FOREIGN KEY(current_order_id) REFERENCES orders(id),
-        FOREIGN KEY(bot_id) REFERENCES bots(id)
-        '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        values = (
-            pair['id'],
-            pair['bot_id'],
-            pair['symbol'],
-            pair['is_active'],
-            pair['current_order_id'],
-            pair['profit_loss'],
-        )
-        c.execute('INSERT INTO pairs VALUES (?, ?, ?, ?, ?, ?)', values)
-        conn.commit()
-
-    def GetPair(self, id: str):
-        ''' Gets Bot details from Database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM pairs WHERE id=?', (id,))
-        result = dict(c.fetchone())
-        return result
-
-    def UpdatePair(self, bot, symbol, pair):
-        ''' Updates a Bot within the Database '''
-        values = (
-            pair['is_active'],
-            pair['current_order_id'],
-            pair['profit_loss'],
-            symbol,
-            bot['id'])
-
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute("UPDATE pairs " + \
-                  "SET is_active = ?, current_order_id = ?, profit_loss = ? " + \
-                  "WHERE symbol = ? and bot_id = ? ", values)
-        conn.commit()
-
-    def GetOpenOrdersOfBot(self, bot):
-        ''' Gets all the bots within a database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM orders Where bot_id = ? and closing_order_id = 0 and is_closed = False', (bot['id'],))
-
-        orders = []
-        result = [dict(row) for row in c.fetchall()]
-        return result
-
-    def GetActivePairsOfBot(self, bot):
-        ''' Gets all the bots within a database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM pairs Where bot_id = ? and is_active = True', (bot['id'],))
-        result = [dict(row) for row in c.fetchall()]
-        return result
-
-    def GetAllPairsOfBot(self, bot):
-        ''' Gets all the bots within a database '''
-        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-        conn.row_factory = sqlite3.Row
-        c = conn.cursor()
-        c.execute('SELECT * FROM pairs Where bot_id = ?', (bot['id'],))
-        result = [dict(row) for row in c.fetchall()]
-        return result
+if __name__ == "__main__":
+    database = BotDatabase("database.db")
+    result = database.GetUser(user_id=467907567)
+    print(result['user_name'])
