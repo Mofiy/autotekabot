@@ -140,3 +140,4 @@ dmypy.json
 .pyre/
 /token.env
 /token.env
+/database.db
