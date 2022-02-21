@@ -47,7 +47,7 @@ class BotDatabase:
 			)''')
         conn.commit()
 
-    def SaveUser(self, user):
+    def save_user(self, user):
         '''
         Adds a User to the Database
 
@@ -61,13 +61,14 @@ class BotDatabase:
         conn.row_factory = sqlite3.Row
         c = conn.cursor()
         values = (user["user_id"],
-                    user["user_name"],
-                    user["wallet"],
-                    user["code"])
-        c.execute('INSERT INTO users VALUES (?, ?, ?, ?)', values)
+                  user["user_name"],
+                  user["wallet"],
+                  user["code"],
+                  user["inviter"])
+        c.execute('INSERT INTO users VALUES (?, ?, ?, ?, ?)', values)
         conn.commit()
 
-    def GetUser(self, user_id: int):
+    def get_user(self, user_id: int):
         ''' Gets User details from Database '''
 
         conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -75,24 +76,23 @@ class BotDatabase:
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
         details = c.fetchone()
-
-
         return details
 
+    def update_user(self, user):
+        ''' Updates a User within the Database '''
 
-    # def UpdateBot(self, user):
-    #     ''' Updates a Bot within the Database '''
-    #
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #
-    #     c.execute('Update bots ' + \
-    #               'Set ' + \
-    #               'name = ' + bot['name'] + ', ' + \
-    #               'profit_target = ' + bot['profit_target'] + ', ' + \
-    #               'Where id = ' + bot['id'])
-    #     conn.commit()
+        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+
+        c.execute("UPDATE users SET " \
+                  "user_name = ?, " \
+                  "wallet = ?, " \
+                  "code = ?, " \
+                  "inviter = ? " \
+                  "WHERE user_id = ?",
+                  (user["user_name"], user["wallet"], user["code"], user["inviter"], user["user_id"]))
+        conn.commit()
     #
     # def SaveOrder(self, order):
     #     '''
@@ -223,7 +223,8 @@ class BotDatabase:
     #     result = [dict(row) for row in c.fetchall()]
     #     return result
 
+
 if __name__ == "__main__":
     database = BotDatabase("database.db")
-    result = database.GetUser(user_id=467907567)
+    result = database.Get_user(user_id=467907567)
     print(result['user_name'])
