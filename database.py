@@ -32,7 +32,7 @@ class BotDatabase:
 			inviter INTEGER NOT NULL DEFAULT 0
 			)''')
 
-        # 			state integer NOT NULL DEFAULT
+        # 			state integer NOT NULL DEFAUL
 
         c.execute('''CREATE TABLE IF NOT EXISTS cars (
 			id INTEGER PRIMARY KEY AUTOINCREMENT, 
