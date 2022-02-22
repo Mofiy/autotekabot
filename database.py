@@ -1,6 +1,7 @@
 import sqlite3
 from decimal import Decimal
 
+__version__ = 0.0001
 
 def adapt_decimal(d):
     return format(round(d, 14), 'f')
@@ -35,14 +36,13 @@ class BotDatabase:
         # 			state integer NOT NULL DEFAUL
 
         c.execute('''CREATE TABLE IF NOT EXISTS cars (
-			id INTEGER PRIMARY KEY AUTOINCREMENT, 
-			vin_number TEXT, 
-			goverment_number TEXT, 
-			body_number TEXT, 
-			engine_number TEXT, 
-			car_number TEXT, 
-            last_date DATE,
-            link TEXT,
+			vin TEXT PRIMARY KEY, 
+			regNumber TEXT, 
+			brand TEXT, 
+			model TEXT, 
+			year TEXT, 
+            createdAt DATE,
+            uuid TEXT,
             from_user INTEGER
 			)''')
         conn.commit()
