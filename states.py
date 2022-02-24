@@ -4,6 +4,12 @@
 #     2 - waiting when will send request
 #     3 - waiting when will send link
 
+import logging
+
+__version__ = 0.0002
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+
 class States:
     def __init__(self):
         self.STATES = dict()
@@ -15,6 +21,7 @@ class States:
             return -1
 
     def set_state(self, id, state):
+        logging.info(f"STATES: set for {id} state: {state} ")
         self.STATES[id] = state
 
     def check_user(self, id):

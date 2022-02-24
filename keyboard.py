@@ -1,14 +1,10 @@
-from aiogram import types
-from aiogram.types import ReplyKeyboardRemove, \
-    ReplyKeyboardMarkup, KeyboardButton, \
-    InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+__version__ = 0.0001
 
 class Keyboard(object):
     def __init__(self, view='InLine'):
         if view == 'InLine':
-            # self.kb_table = InlineKeyboardMarkup()
-        # elif view == 'Reply':
             self.kb_table = ReplyKeyboardMarkup()
         pass
 
@@ -25,9 +21,16 @@ class Keyboard(object):
         menu = ["Нет пригласителя"]
         for item in menu:
             self.kb_table.add(KeyboardButton(item))
-
         self.kb_table.one_time_keyboard = True
         pass
+
+    def get_cancel_menu(self):
+        menu = ["Вернуться в Основное меню"]
+        for item in menu:
+            self.kb_table.add(KeyboardButton(item))
+        self.kb_table.one_time_keyboard = True
+        pass
+
     def get_instant(self):
         return self.kb_table
 

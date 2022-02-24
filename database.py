@@ -1,7 +1,11 @@
 import sqlite3
 from decimal import Decimal
+import logging
 
-__version__ = 0.0001
+__version__ = 0.0002
+
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+
 
 def adapt_decimal(d):
     return format(round(d, 14), 'f')
@@ -40,12 +44,14 @@ class BotDatabase:
 			regNumber TEXT, 
 			brand TEXT, 
 			model TEXT, 
-			year TEXT, 
-            createdAt DATE,
+			year INTEGER, 
+            createdAt INTEGER,
             uuid TEXT,
-            from_user INTEGER
+            user_id INTEGER
 			)''')
         conn.commit()
+
+        logging.info("DB: DB ready to work")
 
     def save_user(self, user):
         '''
@@ -67,6 +73,7 @@ class BotDatabase:
                   user["inviter"])
         c.execute('INSERT INTO users VALUES (?, ?, ?, ?, ?)', values)
         conn.commit()
+        logging.info(f"DB: save user {user}")
 
     def get_user(self, user_id: int):
         ''' Gets User details from Database '''
@@ -76,7 +83,15 @@ class BotDatabase:
         c = conn.cursor()
         c.execute('SELECT * FROM users WHERE user_id = ?', (user_id,))
         details = c.fetchone()
-        return details
+        result = None
+        if details != None:
+            result = {"user_id": details["user_id"],
+                      "user_name": details["user_name"],
+                      "wallet": details["wallet"] + 2,
+                      "code": details["code"],
+                      "inviter": details["inviter"]}
+        logging.info(f"DB: get user {result}")
+        return result
 
     def update_user(self, user):
         ''' Updates a User within the Database '''
@@ -92,139 +107,75 @@ class BotDatabase:
                   "inviter = ? " \
                   "WHERE user_id = ?",
                   (user["user_name"], user["wallet"], user["code"], user["inviter"], user["user_id"]))
+        logging.info(f"DB: update user {user}")
         conn.commit()
-    #
-    # def SaveOrder(self, order):
-    #     '''
-    #     Saves an Order to the Database
-    #     '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     values = (
-    #         order['id'],
-    #         order['bot_id'],
-    #         order['symbol'],
-    #         order['time'],
-    #         order['price'],
-    #         order['take_profit_price'],
-    #         order['original_quantity'],
-    #         order['executed_quantity'],
-    #         order['status'],
-    #         order['side'],
-    #         order['is_entry_order'],
-    #         order['is_closed'],
-    #         order['closing_order_id']
-    #     )
-    #     c.execute('INSERT INTO orders VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', values)
-    #     conn.commit()
-    #
-    #
-    # def UpdateOrder(self, order):
-    #     ''' Updates a Bot within the Database '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #
-    #     values = (
-    #         order['take_profit_price'],
-    #         order['executed_quantity'],
-    #         order['status'],
-    #         order['is_closed'],
-    #         order['closing_order_id'],
-    #         order['id'])
-    #
-    #     c.execute('Update orders ' + \
-    #               'Set ' + \
-    #               'take_profit_price = ?, ' + \
-    #               'executed_quantity = ?, status = ?, ' + \
-    #               'is_closed = ?, closing_order_id = ? ' + \
-    #               'Where id = ?', values)
-    #     conn.commit()
-    #
-    # def SavePair(self, pair):
-    #     '''
-    #     Saves a Pair to the Database
-    #         id text primary key,
-    #         bot_id text,
-    #         symbol text,
-    #         is_active bool,
-    #         current_order_id text,
-    #         profit_loss text,
-    #         FOREIGN KEY(current_order_id) REFERENCES orders(id),
-    #     FOREIGN KEY(bot_id) REFERENCES bots(id)
-    #     '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     values = (
-    #         pair['id'],
-    #         pair['bot_id'],
-    #         pair['symbol'],
-    #         pair['is_active'],
-    #         pair['current_order_id'],
-    #         pair['profit_loss'],
-    #     )
-    #     c.execute('INSERT INTO pairs VALUES (?, ?, ?, ?, ?, ?)', values)
-    #     conn.commit()
-    #
-    # def GetPair(self, id: str):
-    #     ''' Gets Bot details from Database '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     c.execute('SELECT * FROM pairs WHERE id=?', (id,))
-    #     result = dict(c.fetchone())
-    #     return result
-    #
-    # def UpdatePair(self, bot, symbol, pair):
-    #     ''' Updates a Bot within the Database '''
-    #     values = (
-    #         pair['is_active'],
-    #         pair['current_order_id'],
-    #         pair['profit_loss'],
-    #         symbol,
-    #         bot['id'])
-    #
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     c.execute("UPDATE pairs " + \
-    #               "SET is_active = ?, current_order_id = ?, profit_loss = ? " + \
-    #               "WHERE symbol = ? and bot_id = ? ", values)
-    #     conn.commit()
-    #
-    # def GetOpenOrdersOfBot(self, bot):
-    #     ''' Gets all the bots within a database '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     c.execute('SELECT * FROM orders Where bot_id = ? and closing_order_id = 0 and is_closed = False', (bot['id'],))
-    #
-    #     orders = []
-    #     result = [dict(row) for row in c.fetchall()]
-    #     return result
-    #
-    # def GetActivePairsOfBot(self, bot):
-    #     ''' Gets all the bots within a database '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     c.execute('SELECT * FROM pairs Where bot_id = ? and is_active = True', (bot['id'],))
-    #     result = [dict(row) for row in c.fetchall()]
-    #     return result
-    #
-    # def GetAllPairsOfBot(self, bot):
-    #     ''' Gets all the bots within a database '''
-    #     conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-    #     conn.row_factory = sqlite3.Row
-    #     c = conn.cursor()
-    #     c.execute('SELECT * FROM pairs Where bot_id = ?', (bot['id'],))
-    #     result = [dict(row) for row in c.fetchall()]
-    #     return result
 
+    def save_car(self, car):
+        '''Saves a car to the Database'''
 
-if __name__ == "__main__":
-    database = BotDatabase("database.db")
-    result = database.Get_user(user_id=467907567)
-    print(result['user_name'])
+        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        values = (car["vin"],
+                  car["regNumber"],
+                  car["brand"],
+                  car["model"],
+                  car["year"],
+                  car["createdAt"],
+                  car["uuid"],
+                  car["user_id"])
+        c.execute('INSERT INTO cars VALUES (?, ?, ?, ?, ?, ?, ?, ?)', values)
+        conn.commit()
+        logging.info(f"DB: save car {car}")
+
+    def get_car(self, data):
+        ''' Gets car details from Database '''
+        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute('SELECT * FROM cars WHERE vin = ? OR regNumber = ?', (data, data))
+        answer = c.fetchone()
+        result = None
+        if answer != None:
+            result = {
+                "vin": answer["vin"],
+                "regNumber": answer["regNumber"],
+                "brand": answer["brand"],
+                "model": answer["model"],
+                "year": answer["year"],
+                "createdAt": answer["createdAt"],
+                "uuid": answer["uuid"],
+                "user_id": answer["user_id"]
+            }
+        logging.info(f"DB: get car with data: ", result)
+        return result
+
+    def update_car(self, car):
+        ''' Updates a car within the Database
+            vin TEXT PRIMARY KEY,
+			regNumber TEXT,
+			brand TEXT,
+			model TEXT,
+			year INTEGER,
+            createdAt INTEGER,
+            uuid TEXT,
+            user_id INTEGER
+            '''
+        values = (
+            car["regNumber"],
+            car["brand"],
+            car["model"],
+            car["year"],
+            car["createdAt"],
+            car["uuid"],
+            car["user_id"],
+            car["vin"])
+
+        conn = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+        conn.row_factory = sqlite3.Row
+        c = conn.cursor()
+        c.execute("UPDATE cars " \
+                  "SET regNumber = ?, brand = ?, model = ?, year = ?, createdAt = ?, uuid = ?, user_id = ? " \
+                  "WHERE vin = ?", values)
+        conn.commit()
+        logging.info(f"DB: update car {car}")

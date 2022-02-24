@@ -1,22 +1,13 @@
 from aiogram import Bot, Dispatcher, executor, types
-from aiogram.utils.helper import Helper, HelperMode, ListItem
-from aiogram.utils.markdown import text, bold, italic, code, pre
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.contrib.middlewares.logging import LoggingMiddleware
-
-
-
 
 import logging
-import json
 from database import BotDatabase
 from keyboard import Keyboard
 from messages import MESSAGES
 from states import States
+from parsing import Parsing
 
-
-
-__version__ = 0.0001
+__version__ = 0.0002
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 # Загрузить данные токена
@@ -27,6 +18,7 @@ token_file.close()
 # Initialize bot and dispatcher
 bot = Bot(token=API_TOKEN[14:-1])
 dp = Dispatcher(bot)
+
 
 # {"message_id": 7,
 #  "from": {
@@ -60,13 +52,20 @@ async def commands_handler(message: types.Message):
                     "code": id,
                     "inviter": -1}
             result = database.get_user(id)
-            await message.reply(MESSAGES["hello1"])
+            await message.answer(MESSAGES["hello_short"])
             if result is None:
+                await message.answer(MESSAGES["hello1"])
                 states.set_state(id, 1)
                 database.save_user(user)
                 keyboard = Keyboard()
                 keyboard.get_ref_menu()
                 await message.answer(MESSAGES["hello2"], reply_markup=keyboard.get_instant())
+                return
+            else:
+                states.set_state(id, 0)
+                keyboard = Keyboard()
+                keyboard.get_main_menu()
+                await message.answer("Основное меню", reply_markup=keyboard.get_instant())
                 return
     elif state == 1:
         if message["text"] == "/exit":
@@ -75,7 +74,13 @@ async def commands_handler(message: types.Message):
             keyboard.get_main_menu()
             await message.answer("Основное меню", reply_markup=keyboard.get_instant())
             return
-
+    elif state in [2, 3]:
+        if message["text"] == "/exit":
+            states.set_state(id, 0)
+            keyboard = Keyboard()
+            keyboard.get_main_menu()
+            await message.answer("Основное меню", reply_markup=keyboard.get_instant())
+            return
     states.set_state(id, 0)
     await message.reply(MESSAGES["hello1"])
     keyboard = Keyboard()
@@ -91,12 +96,23 @@ async def echo(message: types.Message):
     state = states.check_user(id)
 
     if state == 0:
-        if message.text == "Пригласить друга":
+        if message.text == "Получить данные по VIN":
+            states.set_state(id, 2)
+            keyboard = Keyboard()
+            keyboard.get_cancel_menu()
+            await message.answer(MESSAGES['get_request'], reply_markup=keyboard.get_instant())
+            return
+        elif message.text == "Загрузить данные c Avtoteka":
+            states.set_state(id, 3)
+            keyboard = Keyboard()
+            keyboard.get_cancel_menu()
+            await message.answer(MESSAGES['load_car'], reply_markup=keyboard.get_instant())
+            return
+        elif message.text == "Пригласить друга":
             await message.answer(MESSAGES['referal1'])
             await message.answer(MESSAGES['referal2'].format(code=message["from"]["id"]))
             return
-
-        if message.text == "Узнать баланс RQ":
+        elif message.text == "Узнать баланс RQ":
             user = database.get_user(message["from"]["id"])
             await message.answer(MESSAGES['wallet'].format(rq=user["wallet"]))
             return
@@ -111,7 +127,7 @@ async def echo(message: types.Message):
             keyboard.get_main_menu()
             await message.answer(MESSAGES["ref_info_1"], reply_markup=keyboard.get_instant())
             return
-        else:   # думаем что ввели код пригласителя и пытаемся его проверить
+        else:  # думаем что ввели код пригласителя и пытаемся его проверить
             ref = message.text
             if ref.isdigit():
                 ref = int(ref)
@@ -124,31 +140,97 @@ async def echo(message: types.Message):
                     if user["inviter"] > 0:
                         await message.reply(MESSAGES["ref_err_2"])
                     else:
-                        save_user = {"user_id": user["user_id"],
-                                        "user_name": user["user_name"],
-                                        "wallet": user["wallet"],
-                                        "code": user["code"],
-                                        "inviter": ref}
-                        database.update_user(save_user)
+                        user["inviter"] = ref
+                        database.update_user(user)
                         await message.reply(MESSAGES["ref_add"])
-                        save_user = {"user_id": ref_user["user_id"],
-                                     "user_name": ref_user["user_name"],
-                                     "wallet": ref_user["wallet"]+1,
-                                     "code": ref_user["code"],
-                                     "inviter": ref_user["inviter"]}
-                        database.update_user(save_user)
+                        ref_user["wallet"] = ref_user["wallet"] + 1
+                        database.update_user(ref_user)
                     states.set_state(id, 0)
                     keyboard = Keyboard()
                     keyboard.get_main_menu()
                     await message.reply("Основное меню", reply_markup=keyboard.get_instant())
                     return
+    elif state in [2, 3]:  # обработка основного меню
+        if message.text == "Вернуться в Основное меню":
+            states.set_state(id, 0)
+            keyboard = Keyboard()
+            keyboard.get_main_menu()
+            await message.answer("Основное меню", reply_markup=keyboard.get_instant())
+            return
+        else:
+            if state == 2:  # обработка основного меню ввод запроса на поиск отчета
+                data = message.text.upper()
+                car = database.get_car(data)
+                if car == None:
+                    await message.answer(MESSAGES["get_error1"])
+                else:
+                    user = database.get_user(id)
+                    if user["wallet"] == 0:
+                        await message.answer(MESSAGES["get_car_info"].format(brand=car["brand"],
+                                                                             model=car["model"],
+                                                                             year=car["year"],
+                                                                             createdAt=car["createdAt"]))
+                        await message.answer(MESSAGES["get_error2"])
+                    else:
+                        await message.answer(MESSAGES["get_car_info"].format(brand=car["brand"],
+                                                                             model=car["model"],
+                                                                             year=car["year"],
+                                                                             createdAt=car["createdAt"]) + \
+                                             "\nhttps://api.autoteka.ru/report/uuid/" + car["uuid"])
+                        save_user = database.get_user(id)
+                        save_user["wallet"] = save_user["wallet"] - 1
+                        database.update_user(save_user)
+                        states.set_state(id, 0)
+                    states.set_state(id, 0)
+                    keyboard = Keyboard()
+                    keyboard.get_main_menu()
+                    await message.answer("Основное меню", reply_markup=keyboard.get_instant())
+                    return
+                keyboard = Keyboard()
+                keyboard.get_cancel_menu()
+                await message.answer(MESSAGES['get_request'], reply_markup=keyboard.get_instant())
+                return
+            elif state == 3:  # обработка основного меню ввод ссылки на отчет
+                link = message.text
+                parser = Parsing(link)
+                if parser.check_link():
+                    car = parser.parse
+                    if car is not None:
+                        car_in_db = database.get_car(car["vin"])
+                        is_new = False
+                        if car_in_db == None:
+                            car["user_id"] = id
+                            database.save_car(car)
+                            is_new = True
+                        else:
+                            if car_in_db["createdAt"] < car["createdAt"]:
+                                car["user_id"] = id
+                                database.update_car(car)
+                                is_new = True
+                            else:
+                                await message.answer(MESSAGES["load_old_car"])
+                        if is_new:
+                            save_user = database.get_user(id)
+                            database.update_user(save_user)
+                            states.set_state(id, 0)
+                            keyboard = Keyboard()
+                            keyboard.get_main_menu()
+                            await message.answer(MESSAGES["load_car_success"], reply_markup=keyboard.get_instant())
+                            return
+                    else:
+                        await message.answer(MESSAGES["load_car_bad_link"])
+                else:
+                    await message.answer(MESSAGES["load_car_bad_link"])
+                keyboard = Keyboard()
+                keyboard.get_cancel_menu()
+                await message.answer(MESSAGES['load_car'], reply_markup=keyboard.get_instant())
+                return
+
     await message.answer(MESSAGES["error"].format(error=message.text))
 
 
 if __name__ == "__main__":
-
     # Менеджер состояний и менеджер базы данных
     states = States()
     database = BotDatabase("database.db")
     executor.start_polling(dp, skip_updates=True)
-
