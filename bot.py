@@ -6,8 +6,9 @@ from keyboard import Keyboard
 from messages import MESSAGES
 from states import States
 from parsing import Parsing
+import datetime
 
-__version__ = 0.0002
+__version__ = 0.0003
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 # Загрузить данные токена
@@ -167,16 +168,16 @@ async def echo(message: types.Message):
                     user = database.get_user(id)
                     if user["wallet"] == 0:
                         await message.answer(MESSAGES["get_car_info"].format(brand=car["brand"],
-                                                                             model=car["model"],
-                                                                             year=car["year"],
-                                                                             createdAt=car["createdAt"]))
+                                        model=car["model"],
+                                        year=car["year"],
+                                        createdAt=datetime.datetime.fromtimestamp(car["createdAt"])))
                         await message.answer(MESSAGES["get_error2"])
                     else:
                         await message.answer(MESSAGES["get_car_info"].format(brand=car["brand"],
-                                                                             model=car["model"],
-                                                                             year=car["year"],
-                                                                             createdAt=car["createdAt"]) + \
-                                             "\nhttps://api.autoteka.ru/report/uuid/" + car["uuid"])
+                                        model=car["model"],
+                                        year=car["year"],
+                                        createdAt=datetime.datetime.fromtimestamp(car["createdAt"])) + \
+                                        "\nhttps://autoteka.ru/report/web/uuid/" + car["uuid"])
                         save_user = database.get_user(id)
                         save_user["wallet"] = save_user["wallet"] - 1
                         database.update_user(save_user)
@@ -225,8 +226,10 @@ async def echo(message: types.Message):
                 keyboard.get_cancel_menu()
                 await message.answer(MESSAGES['load_car'], reply_markup=keyboard.get_instant())
                 return
+    keyboard = Keyboard()
+    keyboard.get_main_menu()
+    await message.answer(MESSAGES["error"], reply_markup=keyboard.get_instant())
 
-    await message.answer(MESSAGES["error"].format(error=message.text))
 
 
 if __name__ == "__main__":

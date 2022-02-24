@@ -2,7 +2,7 @@ import sqlite3
 from decimal import Decimal
 import logging
 
-__version__ = 0.0002
+__version__ = 0.0003
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
@@ -37,7 +37,7 @@ class BotDatabase:
 			inviter INTEGER NOT NULL DEFAULT 0
 			)''')
 
-        # 			state integer NOT NULL DEFAUL
+
 
         c.execute('''CREATE TABLE IF NOT EXISTS cars (
 			vin TEXT PRIMARY KEY, 
@@ -147,7 +147,9 @@ class BotDatabase:
                 "uuid": answer["uuid"],
                 "user_id": answer["user_id"]
             }
-        logging.info(f"DB: get car with data: ", result)
+            logging.info(f"DB: get car with data: ", result)
+        else:
+            logging.info(f"DB: get car with data: None")
         return result
 
     def update_car(self, car):

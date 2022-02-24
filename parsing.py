@@ -5,7 +5,7 @@ import json
 import re
 import logging
 
-__version__ = 0.0002
+__version__ = 0.0003
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
@@ -28,7 +28,7 @@ class Parsing:
     def check_link(self):
         temp = self.link.lower()
         logging.info(f'PARSER check the link: {temp}')
-        pattern = "autoteka.ru/report/web/uuid/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
+        pattern = "autoteka.ru/report/\D{3}/uuid/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
         match = re.search(pattern, temp)
         if match:
             pattern = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"
@@ -82,28 +82,3 @@ class Parsing:
             logging.info(
                 f'PARSER have problem with web connections')
         return None
-
-
-if __name__ == "__main__":
-    response = requests.post(
-        url="https://api.autoteka.ru/report/uuid/5d86cd2f-8ad5-4498-970b-8346c6f6ac3d.json?csAppCode=webDesktop")
-    u = response.cookies["u"]
-    print(u)
-    print(response.status_code)
-    print(response.json())
-    print(response.history)
-
-    response = requests.post(url="https://api.autoteka.ru/user/refresh-session")
-    print(response.cookies)
-    print(response.status_code)
-    print(response.json())
-    print(response.history)
-
-    response = requests.post(
-        url="https://api.autoteka.ru/report/uuid/5d86cd2f-8ad5-4498-970b-8346c6f6ac3d.json?csAppCode=webDesktop",
-        cookies=response.cookies)
-    u = response.cookies["u"]
-    print(u)
-    print(response.status_code)
-    print(response.json())
-    print(response.history)
