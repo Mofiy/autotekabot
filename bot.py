@@ -8,7 +8,7 @@ from states import States
 from parsing import Parsing
 import datetime
 
-__version__ = 0.0003
+__version__ = 0.0004
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 # Загрузить данные токена
@@ -97,7 +97,7 @@ async def echo(message: types.Message):
     state = states.check_user(id)
 
     if state == 0:
-        if message.text == "Получить данные по VIN":
+        if message.text == "Получить данные по VIN или гос.номеру":
             states.set_state(id, 2)
             keyboard = Keyboard()
             keyboard.get_cancel_menu()
@@ -133,7 +133,7 @@ async def echo(message: types.Message):
             if ref.isdigit():
                 ref = int(ref)
                 ref_user = database.get_user(ref)
-                if ref_user in None:
+                if ref_user == None:
                     await message.reply(MESSAGES["ref_err_1"])
                     return
                 else:
