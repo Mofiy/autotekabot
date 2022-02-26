@@ -7,17 +7,23 @@ from messages import MESSAGES
 from states import States
 from parsing import Parsing
 import datetime
+import os
+from dotenv import load_dotenv
 
-__version__ = 0.0004
+__version__ = 0.0005
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 # Загрузить данные токена
-token_file = open("token.env", "r")
-API_TOKEN = token_file.readline()
-token_file.close()
+DOTENV_PATH = "token.env"
+if os.path.exists(DOTENV_PATH):
+    load_dotenv(DOTENV_PATH)
+else:
+    logging.error("Did not find ENV file")
+    exit(1)
+
 
 # Initialize bot and dispatcher
-bot = Bot(token=API_TOKEN[14:-1])
+bot = Bot(token=os.environ.get('API_TOKEN'))
 dp = Dispatcher(bot)
 
 
