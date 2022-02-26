@@ -1,6 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-__version__ = 0.0002
+__version__ = 0.0003
 
 class Keyboard(object):
     def __init__(self, view='InLine'):
@@ -8,11 +8,14 @@ class Keyboard(object):
             self.kb_table = ReplyKeyboardMarkup()
         pass
 
-    def get_main_menu(self):
+    def get_main_menu(self, user):
         menu = ["Получить данные по VIN или гос.номеру",
                 "Загрузить данные c Avtoteka",
                 "Узнать баланс RQ",
-                "Пригласить друга"]
+                "Пригласить друга",
+                "Ввести код пригласителя"]
+        if user['inviter'] >= 0:
+            menu = menu[:-1]
         for item in menu:
             self.kb_table.add(KeyboardButton(item))
         pass

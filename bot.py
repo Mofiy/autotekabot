@@ -49,49 +49,35 @@ dp = Dispatcher(bot)
 @dp.message_handler(commands=['start', "no", "exit"])
 async def commands_handler(message: types.Message):
     id = message["from"]["id"]
-    logging.info(f'message from {id}:{message["from"]["username"]} STATE: {states.get_state(id)}')
+    logging.info(f'BOT: from {id}:{message["from"]["username"]} message: {message.text}')
     state = states.check_user(id)
+    result = database.get_user(id)
     if state == 0:
         if message["text"] == "/start":
-            user = {"user_id": id,
-                    "user_name": message["from"]["username"],
-                    "wallet": 3,
-                    "code": id,
-                    "inviter": -1}
-            result = database.get_user(id)
             await message.answer(MESSAGES["hello_short"])
             if result is None:
+                result = {"user_id": id,
+                        "user_name": message["from"]["username"],
+                        "wallet": 3,
+                        "code": id,
+                        "inviter": -1}
                 await message.answer(MESSAGES["hello1"])
-                states.set_state(id, 1)
-                database.save_user(user)
-                keyboard = Keyboard()
-                keyboard.get_ref_menu()
-                await message.answer(MESSAGES["hello2"], reply_markup=keyboard.get_instant())
-                return
-            else:
-                states.set_state(id, 0)
-                keyboard = Keyboard()
-                keyboard.get_main_menu()
-                await message.answer("Основное меню", reply_markup=keyboard.get_instant())
-                return
-    elif state == 1:
-        if message["text"] == "/exit":
-            states.set_state(id, 0)
+                database.save_user(result)
             keyboard = Keyboard()
-            keyboard.get_main_menu()
+            keyboard.get_main_menu(result)
             await message.answer("Основное меню", reply_markup=keyboard.get_instant())
             return
-    elif state in [2, 3]:
+    elif state in [1, 2, 3]:
         if message["text"] == "/exit":
             states.set_state(id, 0)
             keyboard = Keyboard()
-            keyboard.get_main_menu()
+            keyboard.get_main_menu(result)
             await message.answer("Основное меню", reply_markup=keyboard.get_instant())
             return
     states.set_state(id, 0)
     await message.reply(MESSAGES["hello1"])
     keyboard = Keyboard()
-    keyboard.get_main_menu()
+    keyboard.get_main_menu(result)
     await message.reply("Основное меню", reply_markup=keyboard.get_instant())
     return
 
@@ -99,9 +85,9 @@ async def commands_handler(message: types.Message):
 @dp.message_handler()
 async def echo(message: types.Message):
     id = message["from"]["id"]
-    logging.info(f'message from {id}:{message["from"]["username"]} STATE: {states.get_state(id)}')
+    logging.info(f'BOT: from {id}:{message["from"]["username"]} message: {message.text}')
     state = states.check_user(id)
-
+    result = database.get_user(id)
     if state == 0:
         if message.text == "Получить данные по VIN или гос.номеру":
             states.set_state(id, 2)
@@ -123,48 +109,48 @@ async def echo(message: types.Message):
             user = database.get_user(message["from"]["id"])
             await message.answer(MESSAGES['wallet'].format(rq=user["wallet"]))
             return
-    elif state == 1:
-        if message.text == "Добавить номер пригласителя":
+        elif message.text == "Ввести код пригласителя":
             states.set_state(id, 1)
-            return
-
-        elif message.text == "Нет пригласителя":
-            states.set_state(id, 0)
             keyboard = Keyboard()
-            keyboard.get_main_menu()
-            await message.answer(MESSAGES["ref_info_1"], reply_markup=keyboard.get_instant())
+            keyboard.get_cancel_menu()
+            await message.answer(MESSAGES['set_ref'], reply_markup=keyboard.get_instant())
             return
-        else:  # думаем что ввели код пригласителя и пытаемся его проверить
-            ref = message.text
-            if ref.isdigit():
-                ref = int(ref)
-                ref_user = database.get_user(ref)
-                if ref_user == None:
-                    await message.reply(MESSAGES["ref_err_1"])
-                    return
-                else:
-                    user = database.get_user(id)
-                    if user["inviter"] > 0:
-                        await message.reply(MESSAGES["ref_err_2"])
-                    else:
-                        user["inviter"] = ref
-                        database.update_user(user)
-                        await message.reply(MESSAGES["ref_add"])
-                        ref_user["wallet"] = ref_user["wallet"] + 1
-                        database.update_user(ref_user)
-                    states.set_state(id, 0)
-                    keyboard = Keyboard()
-                    keyboard.get_main_menu()
-                    await message.reply("Основное меню", reply_markup=keyboard.get_instant())
-                    return
-    elif state in [2, 3]:  # обработка основного меню
+    elif state in [1, 2, 3]:  # обработка основного меню
         if message.text == "Вернуться в Основное меню":
             states.set_state(id, 0)
             keyboard = Keyboard()
-            keyboard.get_main_menu()
+            keyboard.get_main_menu(result)
             await message.answer("Основное меню", reply_markup=keyboard.get_instant())
             return
         else:
+            if state == 1:
+                ref = message.text
+                if ref.isdigit():
+                    ref = int(ref)
+                    ref_user = database.get_user(ref)
+                    if ref_user == None:
+                        await message.reply(MESSAGES["ref_err_1"])
+                    else:
+                        if result["inviter"] >= 0:
+                            await message.reply(MESSAGES["ref_err_2"])
+                        else:
+                            result["inviter"] = ref_user["user_id"]
+                            database.update_user(result)
+                            await message.reply(MESSAGES["ref_add"])
+                            ref_user["wallet"] = ref_user["wallet"] + 1
+                            database.update_user(ref_user)
+                            states.set_state(id, 0)
+                            keyboard = Keyboard()
+                            keyboard.get_main_menu(result)
+                            await message.answer("Основное меню", reply_markup=keyboard.get_instant())
+                            return
+                else:
+                    await message.reply(MESSAGES["ref_code_not_numeric"])
+                keyboard = Keyboard()
+                keyboard.get_cancel_menu()
+                await message.answer(MESSAGES['set_ref'], reply_markup=keyboard.get_instant())
+                return
+
             if state == 2:  # обработка основного меню ввод запроса на поиск отчета
                 data = message.text.upper()
                 car = database.get_car(data)
@@ -184,13 +170,11 @@ async def echo(message: types.Message):
                                         year=car["year"],
                                         createdAt=datetime.datetime.fromtimestamp(car["createdAt"])) + \
                                         "\nhttps://autoteka.ru/report/web/uuid/" + car["uuid"])
-                        save_user = database.get_user(id)
-                        save_user["wallet"] = save_user["wallet"] - 1
-                        database.update_user(save_user)
-                        states.set_state(id, 0)
+                        user["wallet"] = user["wallet"] - 1
+                        database.update_user(user)
                     states.set_state(id, 0)
                     keyboard = Keyboard()
-                    keyboard.get_main_menu()
+                    keyboard.get_main_menu(result)
                     await message.answer("Основное меню", reply_markup=keyboard.get_instant())
                     return
                 keyboard = Keyboard()
@@ -233,7 +217,7 @@ async def echo(message: types.Message):
                 await message.answer(MESSAGES['load_car'], reply_markup=keyboard.get_instant())
                 return
     keyboard = Keyboard()
-    keyboard.get_main_menu()
+    keyboard.get_main_menu(result)
     await message.answer(MESSAGES["error"], reply_markup=keyboard.get_instant())
 
 

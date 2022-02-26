@@ -2,7 +2,7 @@ import sqlite3
 from decimal import Decimal
 import logging
 
-__version__ = 0.0003
+__version__ = 0.0004
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
@@ -87,7 +87,7 @@ class BotDatabase:
         if details != None:
             result = {"user_id": details["user_id"],
                       "user_name": details["user_name"],
-                      "wallet": details["wallet"] + 2,
+                      "wallet": details["wallet"],
                       "code": details["code"],
                       "inviter": details["inviter"]}
         logging.info(f"DB: get user {result}")
