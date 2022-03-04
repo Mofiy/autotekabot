@@ -120,7 +120,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-messages.py
+bot1_free_exchange/messages.py
 
 # Spyder project settings
 .spyderproject
@@ -139,7 +139,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/database.db
+/bot1_free_exchange/database.db
 /token.env
 /Отчёт Автотеки - AHTFZ29G909130546.pdf
 /temp.json

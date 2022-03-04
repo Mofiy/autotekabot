@@ -14,7 +14,7 @@ __version__ = 0.0005
 
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 # Загрузить данные токена
-DOTENV_PATH = "token.env"
+DOTENV_PATH = "../token.env"
 if os.path.exists(DOTENV_PATH):
     load_dotenv(DOTENV_PATH)
 else:
