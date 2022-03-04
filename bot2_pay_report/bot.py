@@ -12,7 +12,9 @@ from dotenv import load_dotenv
 
 __version__ = 0.0005
 
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+logging.basicConfig(format=u'%(filename)+13s [ LINE:%(lineno)-4s] %(levelname)-8s [%(asctime)s] %(message)s',
+                    level=logging.INFO)
+
 # Загрузить данные токена
 DOTENV_PATH = "../token.env"
 if os.path.exists(DOTENV_PATH):
@@ -23,7 +25,7 @@ else:
 
 
 # Initialize bot and dispatcher
-bot = Bot(token=os.environ.get('API_TOKEN'))
+bot = Bot(token=os.environ.get('BOT_TOKEN'))
 dp = Dispatcher(bot)
 
 
