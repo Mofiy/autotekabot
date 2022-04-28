@@ -71,7 +71,7 @@ class Autoteka:
         headers = {"Content-Type": "application/json",
                    "Authorization": self.token_type + ' ' + self.access_token}
         data = {'vin': vin}
-        response = requests.post(url=url, headers=headers, json=json.dumps(data))
+        response = requests.post(url=url, headers=headers, data=json.dumps(data))
         print(response.json())
         # logging.info(f"AVITO_EXCHANGE: Response status code: {response.status_code}")
         # if response.status_code == 200:
